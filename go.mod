@@ -1,6 +1,6 @@
 module github.com/boilingdata/boilingdata
 
-go 1.21
+go 1.22.1
 
 require github.com/grafana/grafana-plugin-sdk-go v0.225.0
 
@@ -70,6 +70,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/pavi6691/boilingdata-sdk-go v1.0.1
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect

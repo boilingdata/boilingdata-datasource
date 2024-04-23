@@ -6,15 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/boilingdata/boilingdata/pkg/constants"
+	"github.com/boilingdata/boilingdata/pkg/data"
 	"github.com/boilingdata/boilingdata/pkg/models"
 	"github.com/boilingdata/boilingdata/pkg/service"
 	"github.com/boilingdata/boilingdata/pkg/wsclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // Make sure Datasource implements required interfaces. This is important to do
@@ -78,23 +77,9 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("json unmarshal QueryModel : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal QueryModel: %v", err.Error()))
 	}
-	payload := models.Payload{
-		MessageType: "SQL_QUERY",
-		SQL:         qm.SelectQuery,
-		RequestID:   "123456789",
-		ReadCache:   "NONE",
-		Tags: []models.Tag{
-			{
-				Name:  "CostCenter",
-				Value: "930",
-			},
-			{
-				Name:  "ProjectId",
-				Value: "Top secret Area 53",
-			},
-		},
-	}
-
+	payload := models.GetPayLoad()
+	payload.RequestID = "1" // TODO
+	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
 	jsonQuery, err := json.Marshal(payload)
 	if err != nil {
@@ -109,45 +94,10 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 	// create data frame response.
 	// For an overview on data frames and how grafana handles them:
 	// https://grafana.com/developers/plugin-tools/introduction/data-frames
-	var frame *data.Frame
-	if d.Boilingdata_api.Response != nil && len(d.Boilingdata_api.Response) > 0 && len(d.Boilingdata_api.Response[0].Data) > 0 {
-		frame = initiateNewDataFrame(query.RefID, d.Boilingdata_api.Response[0].Data[0])
-		for _, dataItem := range d.Boilingdata_api.Response[0].Data {
-			vals := make([]interface{}, len(frame.Fields))
-			for idx, value := range frame.Fields {
-				if value.Name == "time" {
-					vals[0] = time.Now()
-				} else {
-					vals[idx] = dataItem[value.Name]
-					idx++
-				}
-			}
-			frame.AppendRow(vals...)
-		}
-	} else {
-		backend.Logger.Error("QueryingResponse is nil")
-	}
+	frame := data.GetFrames(query.RefID, d.Boilingdata_api.Response)
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 	return response
-}
-func initiateNewDataFrame(refID string, firstDataEntry map[string]interface{}) *data.Frame {
-	frame := data.NewFrame("response")
-	// add fields
-	frame.Fields = append(frame.Fields,
-		data.NewField("time", nil, []time.Time{}),
-	)
-	frame.RefID = refID
-	for key := range firstDataEntry {
-		var field *data.Field
-		if key == "store_and_fwd_flag" {
-			field = data.NewField(key, nil, []string{})
-		} else {
-			field = data.NewField(key, nil, []float64{})
-		}
-		frame.Fields = append(frame.Fields, field)
-	}
-	return frame
 }
 
 // CheckHealth handles health checks sent from Grafana to the plugin.
