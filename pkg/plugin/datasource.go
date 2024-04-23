@@ -4,14 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 
-	"github.com/boilingdata/boilingdata/pkg/constants"
 	"github.com/boilingdata/boilingdata/pkg/data"
 	"github.com/boilingdata/boilingdata/pkg/models"
-	"github.com/boilingdata/boilingdata/pkg/service"
-	"github.com/boilingdata/boilingdata/pkg/wsclient"
+	"github.com/boilingdata/go-boilingdata/constants"
+	"github.com/boilingdata/go-boilingdata/service"
+	"github.com/boilingdata/go-boilingdata/wsclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 )
@@ -29,15 +27,15 @@ var (
 
 // NewDatasource creates a new datasource instance.
 func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	log.SetOutput(os.Stdout)
+	wsclient := wsclient.NewWSSClient(constants.WssUrl, 0, nil)
 	return &Datasource{
-		Boilingdata_api: service.Service{Wsc: wsclient.NewWSSClient(constants.WssUrl, 0, nil)}}, nil
+		Boilingdata_api: service.QueryService{Wsc: wsclient, Auth: service.Auth{}}}, nil
 }
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
 type Datasource struct {
-	Boilingdata_api service.Service
+	Boilingdata_api service.QueryService
 }
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
@@ -86,7 +84,17 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("json unmarshal jsonQuery : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
 	}
-	_, err = d.Boilingdata_api.Query(string(jsonQuery))
+	if d.Boilingdata_api.Auth.UserName == "" || d.Boilingdata_api.Auth.Password == "" {
+		backend.Logger.Info("Loading settings for username and password")
+		config, err := models.LoadPluginSettings(*pCtx.DataSourceInstanceSettings)
+		if err != nil {
+			backend.Logger.Error("Unable to load settings : " + err.Error())
+			return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Unable to load settings : %v", err.Error()))
+		}
+		d.Boilingdata_api.Auth.UserName = config.UserName
+		d.Boilingdata_api.Auth.Password = config.Secrets.Password
+	}
+	queryResponse, err := d.Boilingdata_api.Query(string(jsonQuery))
 	if err != nil {
 		backend.Logger.Error("Error while querying : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Error while querying : %v", err.Error()))
@@ -94,7 +102,7 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 	// create data frame response.
 	// For an overview on data frames and how grafana handles them:
 	// https://grafana.com/developers/plugin-tools/introduction/data-frames
-	frame := data.GetFrames(query.RefID, d.Boilingdata_api.Response)
+	frame := data.GetFrames(query.RefID, queryResponse)
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 	return response
@@ -125,8 +133,9 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 		res.Message = "Please enter username"
 		return res, nil
 	}
-
-	_, err = d.Boilingdata_api.AuthenticateUser(config.UserName, config.Secrets.Password)
+	d.Boilingdata_api.Auth.UserName = config.UserName
+	d.Boilingdata_api.Auth.Password = config.Secrets.Password
+	_, err = d.Boilingdata_api.Auth.AuthenticateUser()
 
 	if err != nil {
 		res.Status = backend.HealthStatusError

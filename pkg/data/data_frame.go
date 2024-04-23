@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boilingdata/boilingdata/pkg/service"
+	"github.com/boilingdata/go-boilingdata/service"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
