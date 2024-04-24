@@ -7,10 +7,8 @@ import (
 
 	"github.com/boilingdata/boilingdata/pkg/dataframe"
 	"github.com/boilingdata/boilingdata/pkg/settings"
-	"github.com/boilingdata/go-boilingdata/constants"
 	"github.com/boilingdata/go-boilingdata/models"
 	"github.com/boilingdata/go-boilingdata/service"
-	"github.com/boilingdata/go-boilingdata/wsclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 )
@@ -28,16 +26,12 @@ var (
 
 // NewDatasource creates a new datasource instance.
 func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	wsclient := wsclient.NewWSSClient(constants.WssUrl, 0, nil)
-	return &Datasource{
-		Boilingdata_api: service.QueryService{Wsc: wsclient, Auth: service.Auth{}}}, nil
+	return &Datasource{}, nil
 }
 
 // Datasource is an example datasource which can respond to data queries, reports
 // its health and has streaming skills.
-type Datasource struct {
-	Boilingdata_api service.QueryService
-}
+type Datasource struct{}
 
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created. As soon as datasource settings change detected by SDK old datasource instance will
@@ -80,7 +74,7 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("error unmarshalling QueryModel : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error unmarshalling QueryModel: %v", err.Error()))
 	}
-	payload := GetPayLoad()
+	payload := models.GetPayLoad()
 	payload.RequestID = query.RefID
 	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
@@ -89,17 +83,13 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("error marshalling jsonQuery : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error marshalling: %v", err.Error()))
 	}
-	if d.Boilingdata_api.Auth.UserName == "" || d.Boilingdata_api.Auth.Password == "" {
-		backend.Logger.Info("Loading settings for username and password = ")
-		config, err := settings.LoadPluginSettings(*pCtx.DataSourceInstanceSettings)
-		if err != nil {
-			backend.Logger.Error("Unable to load settings : " + err.Error())
-			return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Unable to load settings : %v", err.Error()))
-		}
-		d.Boilingdata_api.Auth.UserName = config.UserName
-		d.Boilingdata_api.Auth.Password = config.Secrets.Password
+	config, err := settings.LoadPluginSettings(*pCtx.DataSourceInstanceSettings)
+	if err != nil {
+		backend.Logger.Error("Unable to load settings : " + err.Error())
+		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Unable to load settings : %v", err.Error()))
 	}
-	queryResponse, err := d.Boilingdata_api.Query(jsonQuery)
+	userService := service.GetUserService(config.UserName, config.Secrets.Password)
+	queryResponse, err := userService.Query(jsonQuery)
 	if err != nil {
 		backend.Logger.Error("Error while querying : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Error while querying : %v", err.Error()))
@@ -111,25 +101,6 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 	return response
-}
-
-func GetPayLoad() models.Payload {
-	return models.Payload{
-		MessageType: "SQL_QUERY",
-		SQL:         "",
-		RequestID:   "",
-		ReadCache:   "NONE",
-		Tags: []models.Tag{
-			{
-				Name:  "CostCenter",
-				Value: "930",
-			},
-			{
-				Name:  "ProjectId",
-				Value: "Top secret Area 53",
-			},
-		},
-	}
 }
 
 // CheckHealth handles health checks sent from Grafana to the plugin.
@@ -157,9 +128,8 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 		res.Message = "Please enter username"
 		return res, nil
 	}
-	d.Boilingdata_api.Auth.UserName = config.UserName
-	d.Boilingdata_api.Auth.Password = config.Secrets.Password
-	_, err = d.Boilingdata_api.Auth.AuthenticateUser()
+	userService := service.GetUserService(config.UserName, config.Secrets.Password)
+	_, err = userService.Auth.AuthenticateUser()
 
 	if err != nil {
 		res.Status = backend.HealthStatusError
