@@ -1,11 +1,11 @@
-package data
+package dataframe
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/boilingdata/go-boilingdata/service"
+	"github.com/boilingdata/go-boilingdata/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
@@ -58,11 +58,11 @@ func initiateNewDataFrame(refID string, firstDataEntry map[string]interface{}) *
 	return frame
 }
 
-func GetFrames(refID string, response []service.Response) *data.Frame {
+func GetFrames(refID string, response *models.Response) *data.Frame {
 	var frame *data.Frame
-	if len(response) > 0 && len(response[0].Data) > 0 {
-		frame = initiateNewDataFrame(refID, response[0].Data[0])
-		for _, dataItem := range response[0].Data {
+	if response != nil && len(response.Data) > 0 {
+		frame = initiateNewDataFrame(refID, response.Data[0])
+		for _, dataItem := range response.Data {
 			vals := make([]interface{}, len(frame.Fields))
 			for idx, value := range frame.Fields {
 				if value.Name == "time" {

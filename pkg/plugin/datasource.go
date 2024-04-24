@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/boilingdata/boilingdata/pkg/data"
-	"github.com/boilingdata/boilingdata/pkg/models"
+	"github.com/boilingdata/boilingdata/pkg/dataframe"
+	"github.com/boilingdata/boilingdata/pkg/settings"
 	"github.com/boilingdata/go-boilingdata/constants"
+	"github.com/boilingdata/go-boilingdata/models"
 	"github.com/boilingdata/go-boilingdata/service"
 	"github.com/boilingdata/go-boilingdata/wsclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -65,28 +66,32 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 	return response, nil
 }
 
+type QueryModel struct {
+	SelectQuery string `json:"selectQuery"`
+}
+
 func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
 	var response backend.DataResponse
 	// Unmarshal the JSON into our queryModel.
-	var qm models.QueryModel
+	var qm QueryModel
 
 	err := json.Unmarshal(query.JSON, &qm)
 	if err != nil {
-		backend.Logger.Error("json unmarshal QueryModel : " + err.Error())
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal QueryModel: %v", err.Error()))
+		backend.Logger.Error("error unmarshalling QueryModel : " + err.Error())
+		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error unmarshalling QueryModel: %v", err.Error()))
 	}
-	payload := models.GetPayLoad()
-	payload.RequestID = "1" // TODO
+	payload := GetPayLoad()
+	payload.RequestID = query.RefID
 	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
 	jsonQuery, err := json.Marshal(payload)
 	if err != nil {
-		backend.Logger.Error("json unmarshal jsonQuery : " + err.Error())
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
+		backend.Logger.Error("error marshalling jsonQuery : " + err.Error())
+		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error marshalling: %v", err.Error()))
 	}
 	if d.Boilingdata_api.Auth.UserName == "" || d.Boilingdata_api.Auth.Password == "" {
-		backend.Logger.Info("Loading settings for username and password")
-		config, err := models.LoadPluginSettings(*pCtx.DataSourceInstanceSettings)
+		backend.Logger.Info("Loading settings for username and password = ")
+		config, err := settings.LoadPluginSettings(*pCtx.DataSourceInstanceSettings)
 		if err != nil {
 			backend.Logger.Error("Unable to load settings : " + err.Error())
 			return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Unable to load settings : %v", err.Error()))
@@ -94,7 +99,7 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		d.Boilingdata_api.Auth.UserName = config.UserName
 		d.Boilingdata_api.Auth.Password = config.Secrets.Password
 	}
-	queryResponse, err := d.Boilingdata_api.Query(string(jsonQuery))
+	queryResponse, err := d.Boilingdata_api.Query(jsonQuery)
 	if err != nil {
 		backend.Logger.Error("Error while querying : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Error while querying : %v", err.Error()))
@@ -102,10 +107,29 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 	// create data frame response.
 	// For an overview on data frames and how grafana handles them:
 	// https://grafana.com/developers/plugin-tools/introduction/data-frames
-	frame := data.GetFrames(query.RefID, queryResponse)
+	frame := dataframe.GetFrames(query.RefID, &queryResponse)
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 	return response
+}
+
+func GetPayLoad() models.Payload {
+	return models.Payload{
+		MessageType: "SQL_QUERY",
+		SQL:         "",
+		RequestID:   "",
+		ReadCache:   "NONE",
+		Tags: []models.Tag{
+			{
+				Name:  "CostCenter",
+				Value: "930",
+			},
+			{
+				Name:  "ProjectId",
+				Value: "Top secret Area 53",
+			},
+		},
+	}
 }
 
 // CheckHealth handles health checks sent from Grafana to the plugin.
@@ -114,7 +138,7 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 // a datasource is working as expected.
 func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	res := &backend.CheckHealthResult{}
-	config, err := models.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
+	config, err := settings.LoadPluginSettings(*req.PluginContext.DataSourceInstanceSettings)
 
 	if err != nil {
 		res.Status = backend.HealthStatusError

@@ -3,6 +3,7 @@ module github.com/boilingdata/boilingdata
 go 1.22.1
 
 require (
+	github.com/boilingdata/go-boilingdata v0.0.3
 	github.com/grafana/grafana-plugin-sdk-go v0.225.0
 )
 
@@ -29,7 +30,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/boilingdata/go-boilingdata v0.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
@@ -73,6 +73,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/orcaman/concurrent-map v1.0.0 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect
