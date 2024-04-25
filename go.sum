@@ -37,8 +37,8 @@ github.com/aws/smithy-go v1.20.2/go.mod h1:krry+ya/rV9RDcV/Q16kpu6ypI4K2czasz0NC
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/boilingdata/go-boilingdata v0.0.4 h1:vbLoXYwU3NJD5fV7WYVa9tWYOup50YfNDx4zIT1CJ6g=
-github.com/boilingdata/go-boilingdata v0.0.4/go.mod h1:oI/blyNelTvF1ATEYPa3FvLw3S1R9ZZvX7K5qPn2+Qc=
+github.com/boilingdata/go-boilingdata v0.0.5 h1:TEBof/II17GCNx2WGoHAG+30YYC9//GW/D5G5R3UAjc=
+github.com/boilingdata/go-boilingdata v0.0.5/go.mod h1:oI/blyNelTvF1ATEYPa3FvLw3S1R9ZZvX7K5qPn2+Qc=
 github.com/bufbuild/protocompile v0.4.0 h1:LbFKd2XowZvQ/kajzguUp2DC9UEIQhIq77fZZlaQsNA=
 github.com/bufbuild/protocompile v0.4.0/go.mod h1:3v93+mbWn/v3xzN+31nwkJfrEpAUwp+BagBSZWx+TP8=
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=

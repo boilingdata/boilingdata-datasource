@@ -62,20 +62,21 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 
 type QueryModel struct {
 	SelectQuery string `json:"selectQuery"`
+	UUID        string `json:"uuid"`
 }
 
 func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query backend.DataQuery) backend.DataResponse {
 	var response backend.DataResponse
 	// Unmarshal the JSON into our queryModel.
 	var qm QueryModel
-
 	err := json.Unmarshal(query.JSON, &qm)
 	if err != nil {
 		backend.Logger.Error("error unmarshalling QueryModel : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error unmarshalling QueryModel: %v", err.Error()))
 	}
+	backend.Logger.Info("Executing Query =>" + qm.UUID)
 	payload := models.GetPayLoad()
-	payload.RequestID = query.RefID
+	payload.RequestID = qm.UUID
 	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
 	jsonQuery, err := json.Marshal(payload)

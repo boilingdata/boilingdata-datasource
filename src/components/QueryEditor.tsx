@@ -9,9 +9,11 @@ type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
 export function QueryEditor({ query, onChange, onRunQuery }: Props) {
 
   const onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, selectQuery: event.target.value });
+    query.uuid = crypto.randomUUID()
+    query.selectQuery = event.target.value
+    onChange({...query});
   };
-
+ 
   const { selectQuery } = query;
 
   return (

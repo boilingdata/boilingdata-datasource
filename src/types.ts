@@ -3,6 +3,7 @@ import { DataQuery } from '@grafana/schema';
 
 export interface MyQuery extends DataQuery {
   selectQuery?: string;
+  uuid?: string;
 }
 
 export const DEFAULT_QUERY: Partial<MyQuery> = {
