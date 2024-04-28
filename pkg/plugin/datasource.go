@@ -7,10 +7,10 @@ import (
 
 	"github.com/boilingdata/boilingdata/pkg/dataframe"
 	"github.com/boilingdata/boilingdata/pkg/settings"
-	"github.com/boilingdata/go-boilingdata/models"
-	"github.com/boilingdata/go-boilingdata/service"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/pavi6691/go-boilingdata/boilingdata"
+	"github.com/pavi6691/go-boilingdata/models"
 )
 
 // Make sure Datasource implements required interfaces. This is important to do
@@ -74,9 +74,8 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("error unmarshalling QueryModel : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error unmarshalling QueryModel: %v", err.Error()))
 	}
-	backend.Logger.Info("Executing Query =>" + qm.UUID)
 	payload := models.GetPayLoad()
-	payload.RequestID = qm.UUID
+	payload.RequestID = qm.UUID + "-" + query.RefID
 	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
 	jsonQuery, err := json.Marshal(payload)
@@ -89,7 +88,7 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("Unable to load settings : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Unable to load settings : %v", err.Error()))
 	}
-	userService := service.GetUserService(config.UserName, config.Secrets.Password)
+	userService := boilingdata.GetInstance(config.UserName, config.Secrets.Password)
 	queryResponse, err := userService.Query(jsonQuery)
 	if err != nil {
 		backend.Logger.Error("Error while querying : " + err.Error())
@@ -98,7 +97,11 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 	// create data frame response.
 	// For an overview on data frames and how grafana handles them:
 	// https://grafana.com/developers/plugin-tools/introduction/data-frames
-	frame := dataframe.GetFrames(query.RefID, &queryResponse)
+	frame, err := dataframe.GetFrames(query.RefID, queryResponse)
+	if err != nil {
+		backend.Logger.Error(err.Error())
+		return backend.ErrDataResponse(backend.StatusBadRequest, err.Error())
+	}
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 	return response
@@ -129,8 +132,8 @@ func (d *Datasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequ
 		res.Message = "Please enter username"
 		return res, nil
 	}
-	userService := service.GetUserService(config.UserName, config.Secrets.Password)
-	_, err = userService.Auth.AuthenticateUser()
+	instance := boilingdata.GetInstance(config.UserName, config.Secrets.Password)
+	_, err = instance.Auth.Authenticate()
 
 	if err != nil {
 		res.Status = backend.HealthStatusError
