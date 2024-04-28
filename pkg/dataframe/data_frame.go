@@ -19,8 +19,8 @@ func initiateNewDataFrame(refID string, response *models.Response) *data.Frame {
 	for indx, key := range response.Keys {
 		var ok bool = false
 		if indx == 0 {
-			_, err := parseDateTime(firstDataEntry[key])
-			if err == nil {
+			times, err := parseDateTime(firstDataEntry[key])
+			if err == nil && times.Unix() > 0 {
 				ok = true
 			}
 		}

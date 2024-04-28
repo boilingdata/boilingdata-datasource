@@ -7,17 +7,48 @@
   "backend": true,
   "executable": "gpx_boilingdata",
   "info": {
-    "description": "Boilingdata",
+    "description": "Scalable on-the-fly analytics from S3",
     "author": {
-      "name": "Boilingdata"
+      "name": "Boilingdata",
+      "url": "https://www.boilingdata.com"
     },
     "keywords": ["datasource"],
     "logos": {
-      "small": "img/logo.svg",
-      "large": "img/logo.svg"
+      "small": "img/logo_small.webp",
+      "large": "img/logo_small.webp"
     },
-    "links": [],
-    "screenshots": [],
+    "links": [
+      {
+        "name": "Website",
+        "url": "https://www.boilingdata.com"
+      },
+      {
+        "name": "GitHub",
+        "url": "https://github.com/boilingdata"
+      },
+      {
+        "name": "Docs",
+        "url": "https://github.com/boilingdata/boilingdata-datasource/blob/main/README.md"
+      },
+      {
+        "name": "License",
+        "url": "https://github.com/boilingdata/boilingdata-datasource/blob/main/LICENSE"
+      }
+    ],
+    "screenshots": [
+      {
+        "name": "Settings",
+        "path": "img/screenshots/boilingdata_settings.png"
+      },
+      {
+        "name": "Query",
+        "path": "img/screenshots/boilingdata_query.png"
+      },
+      {
+        "name": "Dashboard-1",
+        "path": "img/screenshots/boilingdata_dashboard.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
