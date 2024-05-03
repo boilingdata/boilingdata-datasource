@@ -3,7 +3,7 @@ version: '3.0'
 services:
   grafana:
     user: root
-    container_name: 'boilingdata-boilingdata-datasource'
+    container_name: 'grafana'
 
     platform: 'linux/amd64'
     build:
@@ -13,7 +13,7 @@ services:
         grafana_version: ${GRAFANA_VERSION:-10.3.3}
     ports:
       - 3000:3000/tcp
-      - 2345:2345/tcp # delve
+      - 2346:2346/tcp # delve
     security_opt:
       - 'apparmor:unconfined'
       - 'seccomp:unconfined'
