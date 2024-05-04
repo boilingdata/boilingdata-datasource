@@ -7,10 +7,10 @@ import (
 
 	"github.com/boilingdata/boilingdata/pkg/dataframe"
 	"github.com/boilingdata/boilingdata/pkg/settings"
+	"github.com/boilingdata/go-boilingdata/boilingdata"
+	"github.com/boilingdata/go-boilingdata/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
-	"github.com/pavi6691/go-boilingdata/boilingdata"
-	"github.com/pavi6691/go-boilingdata/models"
 )
 
 // Make sure Datasource implements required interfaces. This is important to do

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/boilingdata/go-boilingdata/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"github.com/pavi6691/go-boilingdata/models"
 )
 
 func initiateNewDataFrame(refID string, response *models.Response) *data.Frame {

@@ -8,6 +8,10 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 
 ## Getting started
 
+Just Execute ./deploy.sh 
+
+OR follow below steps
+
 ### Backend
 
 1. Update [Grafana plugin SDK for Go](https://grafana.com/developers/plugin-tools/introduction/grafana-plugin-sdk-for-go) dependency to the latest minor version:

@@ -50,6 +50,8 @@ fi
 # Execute mage command
 mage -v
 
+npm install
+
 # Execute npm run build
 npm run build
 
@@ -75,4 +77,4 @@ export GRAFANA_ACCESS_POLICY_TOKEN=glc_eyJvIjoiNjQyNjM1IiwibiI6InBsdWdpbi1zaWdua
 npx @grafana/sign-plugin@latest --rootUrls http://localhost:3000
 
 # Run Docker Compose
-docker-compose restart
+docker-compose up -d && docker compose restart
