@@ -90,18 +90,46 @@ func getValue(value interface{}) string {
 	}
 }
 
-func parseDateTime(dateDate interface{}) (time.Time, error) {
-	switch v := dateDate.(type) {
+func parseDateTime(dateTime interface{}) (time.Time, error) {
+	switch v := dateTime.(type) {
 	case time.Time:
 		return v, nil // If value is already a time.Time, return it
 	case string:
-		return time.Parse(time.RFC3339Nano, v) // If value is a string, parse it as time
+		formats := []string{
+			time.RFC3339Nano,
+			"2006-01-02 15:04:05+00",
+			time.DateTime,
+			time.Layout,
+			time.ANSIC,
+			time.UnixDate,
+			time.RubyDate,
+			time.RFC822,
+			time.RFC822Z,
+			time.RFC850,
+			time.RFC1123,
+			time.RFC1123Z,
+			time.RFC3339,
+			time.Kitchen,
+			time.Stamp,
+			time.StampMilli,
+			time.StampMicro,
+			time.StampNano,
+			time.DateOnly,
+			time.TimeOnly,
+		}
+		for _, format := range formats {
+			t, err := time.Parse(format, v)
+			if err == nil {
+				return t, nil
+			}
+		}
+		return time.Time{}, fmt.Errorf("failed to parse time from string %q", v)
 	case int64:
-		return time.UnixMilli(v), nil // If value is an int64, convert it to time.Time
+		return time.Unix(0, v*int64(time.Millisecond)), nil // If value is an int64, convert it to time.Time
 	case float64:
-		return time.UnixMilli(int64(v)), nil // If value is an int64, convert it to time.Time
+		return time.Unix(0, int64(v)*int64(time.Millisecond)), nil // If value is an int64, convert it to time.Time
 	default:
-		return time.Time{}, fmt.Errorf("unsupported type %T", dateDate)
+		return time.Time{}, fmt.Errorf("unsupported type %T", dateTime)
 	}
 }
 
