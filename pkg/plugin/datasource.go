@@ -92,8 +92,8 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 	userService := boilingdata.GetInstance(config.UserName, config.Secrets.Password)
 	queryResponse, err := userService.Query(jsonQuery)
 	if err != nil {
-		backend.Logger.Error("Error while querying : " + err.Error())
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("Error while querying : %v", err.Error()))
+		backend.Logger.Error(err.Error())
+		return backend.ErrDataResponse(backend.StatusBadRequest, err.Error())
 	}
 	// create data frame response.
 	// For an overview on data frames and how grafana handles them:
