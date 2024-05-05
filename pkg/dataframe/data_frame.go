@@ -112,16 +112,18 @@ func GetFrames(refID string, response *messages.Response) (*data.Frame, error) {
 		for idx, dataItem := range response.Data {
 			for keyIndx, key := range response.Keys {
 				field := frame.Fields[keyIndx]
-				if key == "time" {
-					validTime, err := parseDateTime(dataItem[key])
-					if err == nil {
-						field.SetConcrete(0, validTime)
+				if dataItem[key] != nil {
+					if field.Name == "time" {
+						validTime, err := parseDateTime(dataItem[key])
+						if err == nil {
+							field.SetConcrete(idx, validTime)
+						} else {
+							v := getValue(dataItem[key])
+							return nil, fmt.Errorf("This value = %s in Column %s cannot be converted to date and time", v, response.Keys[0])
+						}
 					} else {
-						v := getValue(dataItem[key])
-						return nil, fmt.Errorf("This value = %s in Column %s cannot be converted to date and time", v, response.Keys[0])
+						field.SetConcrete(idx, dataItem[key])
 					}
-				} else if dataItem[key] != nil {
-					field.SetConcrete(idx, dataItem[key])
 				}
 			}
 		}
