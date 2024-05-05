@@ -18,14 +18,14 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
 
   return (
     <div style={{ width: '100%' }}>
-      <InlineField label="Query" labelWidth={16} tooltip="Not used yet">
-        <Input
+      <InlineField label="Query" labelWidth={16} tooltip="SQL Query">
+        <Input 
+          style={{ width: '100%' }}
           id="query-editor-query-text"
           onChange={onQueryTextChange}
           value={selectQuery || ''}
           required
           placeholder="Enter a query"
-          width={100}
         />
       </InlineField>
     </div>
