@@ -3,7 +3,7 @@ module github.com/boilingdata/boilingdata
 go 1.22.1
 
 require (
-	github.com/boilingdata/go-boilingdata v0.0.15
+	github.com/boilingdata/go-boilingdata v0.0.16
 	github.com/grafana/grafana-plugin-sdk-go v0.228.0
 )
 
