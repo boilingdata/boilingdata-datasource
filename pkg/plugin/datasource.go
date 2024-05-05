@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/boilingdata/boilingdata/pkg/dataframe"
 	"github.com/boilingdata/boilingdata/pkg/settings"
@@ -76,7 +75,8 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error unmarshalling QueryModel: %v", err.Error()))
 	}
 	payload := messages.GetPayLoad()
-	payload.RequestID = fmt.Sprintf("%d-%s", time.Now().UnixMilli(), query.RefID)
+	// payload.RequestID = fmt.Sprintf("%d-%s", time.Now().UnixMilli(), query.RefID)
+	payload.RequestID = qm.UUID
 	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
 	jsonQuery, err := json.Marshal(payload)
