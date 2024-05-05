@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/boilingdata/boilingdata/pkg/dataframe"
 	"github.com/boilingdata/boilingdata/pkg/settings"
 	"github.com/boilingdata/go-boilingdata/boilingdata"
-	"github.com/boilingdata/go-boilingdata/models"
+	"github.com/boilingdata/go-boilingdata/messages"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 )
@@ -74,8 +75,8 @@ func (d *Datasource) query(_ context.Context, pCtx backend.PluginContext, query 
 		backend.Logger.Error("error unmarshalling QueryModel : " + err.Error())
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("error unmarshalling QueryModel: %v", err.Error()))
 	}
-	payload := models.GetPayLoad()
-	payload.RequestID = qm.UUID + "-" + query.RefID
+	payload := messages.GetPayLoad()
+	payload.RequestID = fmt.Sprintf("%d-%s", time.Now().UnixMilli(), query.RefID)
 	payload.SQL = qm.SelectQuery
 	// Convert the payload to JSON string
 	jsonQuery, err := json.Marshal(payload)

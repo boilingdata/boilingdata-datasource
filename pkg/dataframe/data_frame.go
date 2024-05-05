@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boilingdata/go-boilingdata/models"
+	"github.com/boilingdata/go-boilingdata/messages"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
-func initiateNewDataFrame(refID string, response *models.Response) *data.Frame {
+func initiateNewDataFrame(refID string, response *messages.Response) *data.Frame {
 	firstDataEntry := response.Data[0]
 	frame := data.NewFrame("response")
 	// add fields
@@ -25,42 +25,44 @@ func initiateNewDataFrame(refID string, response *models.Response) *data.Frame {
 			}
 		}
 		if ok {
-			field = data.NewField("time", nil, []time.Time{})
+			field = data.NewFieldFromFieldType(data.FieldTypeNullableTime, len(response.Data))
+			field.Name = "time"
 		} else {
 			switch firstDataEntry[key].(type) {
 			case int8:
-				field = data.NewField(key, nil, []int8{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableInt8, len(response.Data))
 			case int16:
-				field = data.NewField(key, nil, []string{})
+				field = data.NewFieldFromFieldType(data.FieldTypeInt16, len(response.Data))
 			case int32:
-				field = data.NewField(key, nil, []int32{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableInt32, len(response.Data))
 			case int64:
-				field = data.NewField(key, nil, []int64{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableInt64, len(response.Data))
 			case uint8:
-				field = data.NewField(key, nil, []uint8{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableUint8, len(response.Data))
 			case uint16:
-				field = data.NewField(key, nil, []uint16{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableUint16, len(response.Data))
 			case uint32:
-				field = data.NewField(key, nil, []uint32{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableUint32, len(response.Data))
 			case uint64:
-				field = data.NewField(key, nil, []uint64{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableUint64, len(response.Data))
 			case float32:
-				field = data.NewField(key, nil, []float32{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableFloat32, len(response.Data))
 			case float64:
-				field = data.NewField(key, nil, []float64{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableFloat64, len(response.Data))
 			case string:
-				field = data.NewField(key, nil, []string{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableString, len(response.Data))
 			case bool:
-				field = data.NewField(key, nil, []bool{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableBool, len(response.Data))
 			case time.Time:
-				field = data.NewField(key, nil, []time.Time{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableTime, len(response.Data))
 			case json.RawMessage:
-				field = data.NewField(key, nil, []json.RawMessage{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableJSON, len(response.Data))
 			case data.EnumItemIndex:
-				field = data.NewField(key, nil, []data.EnumItemIndex{})
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableEnum, len(response.Data))
 			default:
-				panic(fmt.Errorf("ksy '%s' value '%s' specified with unsupported type", key, firstDataEntry[key]))
+				field = data.NewFieldFromFieldType(data.FieldTypeNullableString, len(response.Data))
 			}
+			field.Name = key
 		}
 		frame.Fields = append(frame.Fields, field)
 	}
@@ -103,30 +105,29 @@ func parseDateTime(dateDate interface{}) (time.Time, error) {
 	}
 }
 
-func GetFrames(refID string, response *models.Response) (*data.Frame, error) {
+func GetFrames(refID string, response *messages.Response) (*data.Frame, error) {
 	var frame *data.Frame
 	if response != nil && len(response.Data) > 0 {
 		frame = initiateNewDataFrame(refID, response)
-		for _, dataItem := range response.Data {
-			vals := make([]interface{}, len(frame.Fields))
-			for idx, value := range frame.Fields {
-				if value.Name == "time" {
-					validTime, err := parseDateTime(dataItem[response.Keys[0]])
+		for idx, dataItem := range response.Data {
+			for keyIndx, key := range response.Keys {
+				field := frame.Fields[keyIndx]
+				if key == "time" {
+					validTime, err := parseDateTime(dataItem[key])
 					if err == nil {
-						vals[0] = validTime
+						field.SetConcrete(0, validTime)
 					} else {
-						v := getValue(dataItem[response.Keys[0]])
+						v := getValue(dataItem[key])
 						return nil, fmt.Errorf("This value = %s in Column %s cannot be converted to date and time", v, response.Keys[0])
 					}
-				} else {
-					vals[idx] = dataItem[value.Name]
-					idx++
+				} else if dataItem[key] != nil {
+					field.SetConcrete(idx, dataItem[key])
 				}
 			}
-			frame.AppendRow(vals...)
 		}
 	} else {
-		backend.Logger.Error("QueryingResponse is nil")
+		backend.Logger.Error("No response")
+		return nil, fmt.Errorf("No response")
 	}
 	return frame, nil
 }
