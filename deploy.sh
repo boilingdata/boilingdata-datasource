@@ -1,5 +1,6 @@
 #!/bin/bash
 
+git pull
 # Function to check if a command is available
 command_exists() {
     command -v "$1" >/dev/null 2>&1
