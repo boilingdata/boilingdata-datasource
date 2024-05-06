@@ -1,16 +1,20 @@
-# Grafana data source plugin template
+# BoilingData Grafana data source plugin
 
-This template is a starting point for building a Data Source Plugin for Grafana.
+Run the `deploy.sh` script that will compile and sign the plugin and start local Grafana container with the `BoilingData` data source plugin installed.
 
-## What are Grafana data source plugins?
+```shell
+./deploy.sh
+```
 
-Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
+Open `http://localhost:3000/`, 
 
-## Getting started
+- Connections -> Data Sources -> boilingdata -> Set correct `Username` and `Password` -> "Explore data", and test e.g. with this query as below.
 
-Just Execute ./deploy.sh 
+```sql
+SELECT strftime(tpep_pickup_datetime, '%Y-%m-%d'), count(*) as trips FROM parquet_scan('s3://boilingdata-demo/demo.parquet') GROUP BY strftime(tpep_pickup_datetime, '%Y-%m-%d') order by strftime(tpep_pickup_datetime, '%Y-%m-%d');
+```
 
-OR follow below steps
+## Detailed Steps (see the Grafana data source template repository)
 
 ### Backend
 
